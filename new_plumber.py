@@ -9,7 +9,7 @@ DATE_TIME_RE = re.compile(r'^\s*(\d{2}/\d{2}/\d{4})\s*\|\s*(\d{2}:\d{2})\s*(.*)$
 
 # Forex currency and amount e.g. "USD 20.00"
 FOREX_RE = re.compile(
-        r'(?P<currency>[A-Z]{3})\s+(?P<amount>[\d,]+(?:\.\d{1,2})?)\s*$'
+    r'\b(?P<currency>[A-Z]{3})\b\s+(?P<amount>[\d,]+(?:\.\d{1,2})?)\s*$'
     )
 
 DEFAULT_LOCAL_CURRENCY = "INR"
