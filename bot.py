@@ -72,6 +72,9 @@ async def receive_password(update: Update, context: CallbackContext) -> None:
     
     file_info = pending_files[chat_id]
     
+    # send processing message
+    await update.message.reply_text("Processing your file, please wait...")
+    
     await process_pdf_file(
         update.message,
         context,
@@ -96,7 +99,7 @@ async def receive_format(update: Update, context: CallbackContext) -> None:
         return
 
     pending_files[chat_id]['format'] = user_format
-    file_info = pending_files.pop(chat_id)
+    file_info = pending_files.get(chat_id)
     
     # Ask for password if not already provided
     if not file_info['password']:
@@ -119,6 +122,9 @@ async def receive_format(update: Update, context: CallbackContext) -> None:
         file_info['password'],
         file_info['format']
     )
+    
+    # Cleanup pending file entry
+    pending_files.pop(chat_id, None)
 
 async def process_pdf_file(message, context, file_id, file_name, input_file, output_file, password, user_format):
     """Handles the actual PDF processing and sends the output CSV."""
