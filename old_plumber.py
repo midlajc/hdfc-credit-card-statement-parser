@@ -14,7 +14,7 @@ def process_pdf_old(input, output, password, debugLog=False):
         if page.extract_text().find("Domestic Transactions") > 0:
             print("Domestic") if debugLog else 0
             
-            for (index, row) in enumerate(page.extract_table()):
+            for (index, row) in enumerate(page.extract_table()):  # ty:ignore[invalid-argument-type]
                 if index == 0 or row[0] == "" or row[0] == None:
                     continue
 
@@ -42,7 +42,7 @@ def process_pdf_old(input, output, password, debugLog=False):
                 "explicit_vertical_lines": [380] # Split the currency
             }
             
-            for (index, row) in enumerate(page.extract_table(table_settings=table_settings)):
+            for (index, row) in enumerate(page.extract_table(table_settings=table_settings)):  # ty:ignore[invalid-argument-type]
 
                 if index == 0 or row[0] == "" or row[0] == None:
                     continue
@@ -71,10 +71,19 @@ def process_pdf_old(input, output, password, debugLog=False):
     combined.extend(indian)
     combined.extend(foreign)
 
-    fields = ["date", "currency", "description", "forex_amount", "forex_rate", "amount", "type"]
+    cols = ["Date","Withdrawals","Deposits","Payee","Description","Reference Number"]
     with open(output, 'w') as file:
-        writer = csv.DictWriter(file, delimiter=',', lineterminator='\n', quoting=csv.QUOTE_ALL, fieldnames=fields)
+        writer = csv.DictWriter(file, delimiter=',', lineterminator='\n', quoting=csv.QUOTE_ALL, fieldnames=cols)
         writer.writeheader()
 
         for row in combined:
-            writer.writerow({ key: row[key] for key in fields })
+
+            formatted = {
+                "Date": row.get("date", "").strip(),
+                "Withdrawals": row["amount"] if row["type"] == "Dr" else "",
+                "Deposits": row["amount"] if row["type"] == "Cr" else "",
+                "Payee": "",
+                "Description": row.get('description', ''),
+                "Reference Number": f"Forex: {row['forex_amount']} {row['currency']} @ {row['forex_rate']}" if row.get('forex_amount') else ""
+            }
+            writer.writerow(formatted)

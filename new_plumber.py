@@ -15,7 +15,7 @@ FOREX_RE = re.compile(
 DEFAULT_LOCAL_CURRENCY = "INR"
 
 def clean_amount_str(s: Optional[str]) -> Optional[float]:
-    m = re.search(r'([\d,]+(?:\.\d{1,2})?)', s)
+    m = re.search(r'([\d,]+(?:\.\d{1,2})?)', s)  # ty:ignore[no-matching-overload]
     if not m:
         return None
     
@@ -143,10 +143,18 @@ def process_pdf_new(input: str, output: str, password: Optional[str] = None, deb
     rows = extract_rows_from_pdf(input, password=password, debugLog=debugLog)
 
     # Prepare output CSV columns
-    cols = ["date","time","currency","description","forex_amount","forex_rate","amount","type"]
+    cols = ["Date","Withdrawals","Deposits","Payee","Description","Reference Number"]
     with open(output, 'w', newline='', encoding='utf-8') as csvfile:
         writer = csv.DictWriter(csvfile, delimiter=',', lineterminator='\n', quoting=csv.QUOTE_ALL, fieldnames=cols)
         writer.writeheader()
         
         for row in rows:
-            writer.writerow({ key: row.get(key, "") for key in cols })
+            formatted = {
+                "Date": row.get("date", ""),
+                "Withdrawals": row["amount"] if row["type"] == "Dr" else "",
+                "Deposits": row["amount"] if row["type"] == "Cr" else "",
+                "Payee": "",
+                "Description": row.get('description', ''),
+                "Reference Number": f"Forex: {row['forex_amount']} {row['currency']} @ {row['forex_rate']}" if row.get('forex_amount') else ""
+            }
+            writer.writerow(formatted)
